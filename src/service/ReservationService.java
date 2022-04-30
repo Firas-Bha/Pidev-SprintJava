@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package service;
+import com.google.common.base.Joiner;
 import entities.Reservation;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,11 +12,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import static java.util.Collections.list;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.apache.http.util.TextUtils;
 import util.MyDB;
 
 /**
@@ -32,8 +37,8 @@ public class ReservationService implements IServiceReservation <Reservation>  {
     @Override
     public void ajouterReservation(Reservation t) {
        try {
-            String req = "insert into reservation (date_res,event_id,Nom,nbr_personnes,email)"
-                    +"values('"+t.getDate_res()+"','"+t.getEvent_id()+"','"+t.getNom()+"','"+t.getNbr_personnes()+"','"+t.getEmail()+"')";
+            String req = "insert into reservation (date_res,event_id,Nom,nbr_personnes,email,capacite)"
+                    +"values('"+t.getDate_res()+"','"+t.getEvent_id()+"','"+t.getNom()+"','"+t.getNbr_personnes()+"','"+t.getEmail()+"','"+t.getCapacite()+"')";
             Statement st = cnx.createStatement(); //yhez les données ou hothom fel BD/ pour les requetes statiques
             st.executeUpdate(req);
             System.out.println("Reservation ajoutée avec succées");
@@ -79,7 +84,7 @@ public class ReservationService implements IServiceReservation <Reservation>  {
     public List<Reservation> recupererReservation() {
        List <Reservation> reservation = new ArrayList<>();//list interface array list classe
         try {
-             String req = "SELECT t.id,t.date_res,t.event_id,t.nbr_personnes,t.email,t1.Nom FROM reservation t  join evenement t1  on t.event_id=t1.id ";
+             String req = "SELECT t.id,t.date_res,t.event_id,t.nbr_personnes,t.email,t1.Nom,t1.capacite FROM reservation t  join evenement t1  on t.event_id=t1.id ";
              
              Statement st=cnx.createStatement();
              ResultSet rs = st.executeQuery(req);  // Pour bien structurer les données
@@ -94,6 +99,7 @@ public class ReservationService implements IServiceReservation <Reservation>  {
                  t1.setNom(rs.getString("Nom"));
                  System.out.println(t1.getNom());
                  reservation.add(t1);
+                 t1.setCapacite(rs.getInt(7)); 
              }
             
         } catch (SQLException ex) {
@@ -142,11 +148,57 @@ public class ReservationService implements IServiceReservation <Reservation>  {
 
         }
         return idr;
-        
-        
-
-    }
-    
      
+    }
+       
+       
+       public Map<String, Integer> NbResByEv() {
+        Map<String, Integer> mp =new HashMap<>();
+        try {
+           
+            Statement stm = cnx.createStatement();
+            ResultSet rs;
+            String query="SELECT count(*) as nbRes, evenement  FROM  reservation group by evenement  ";
+            rs=stm.executeQuery(query);
+            while(rs.next()){
+               
+                mp.put(rs.getString("evenement"),rs.getInt("nbRes"));
+            }
+            
+        } catch (SQLException ex) {
+            System.out.println(" erreur d'affichage  ");
+        }
+        return mp ;
+    }
+       
+        public List<String> sommePersonne(int id) throws SQLException {
+         ObservableList<Reservation> Reservationliste = FXCollections.observableArrayList();
+        List<String>  reservation = new ArrayList<>();
+        StringBuilder strbul = new StringBuilder();
+        String query = "select distinct sum(nbr_personnes),capacite from reservation  where event_id='"+id+"'";
+        PreparedStatement stm = cnx.prepareStatement(query);
+        ResultSet rs;
+        rs = stm.executeQuery(query);
+        
+        while (rs.next()) {
+     // = new  Reservation (rs.getInt("datde_res"),rs.getString("Nom"), rs.getString("date_res"), rs.getInt("nbr_personnes"), rs.getString("email")); 
 
+               //idp.add(rs.getString("event_id"));
+               Reservation t1 = new Reservation();
+               reservation.add(rs.getString("sum(nbr_personnes)"));
+               // t1.setCapacite(rs.getInt(2)); 
+              // reservation.setNbr_personnes(rs.getInt(1));
+               // reservation.add(t1);
+              // t1.setNbPerDispo(rs.getInt(query));   
+           
+        }
+       
+        
+        return reservation;
+    
+    }
+        
+        
+  
+    
 }

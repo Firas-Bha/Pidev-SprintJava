@@ -8,6 +8,7 @@ package entities;
 import java.util.Date;
 import java.util.logging.Logger;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
  *
@@ -16,8 +17,8 @@ import javafx.scene.image.Image;
 public class Evenement {
     public static String pathfile; 
     public static String filename="";
-    public static  Image imageE ;
-    
+   // public static  Image imageE ;
+      private ImageView img;
      private int id;
      private String Nom;
      private int Capacite;
@@ -109,7 +110,7 @@ public class Evenement {
     public String toString() {
         return "Evenement{" + "id=" + id + ", Nom=" + Nom + ", Capacite=" + Capacite + ", Date=" + Date + ", Description=" + Description + ", image=" + image + ", Adresse=" + Adresse + '}';
     }
-
+/*
     public Image getImageE() {
         return imageE;
     }
@@ -117,7 +118,13 @@ public class Evenement {
     public void setImageE(Image imageE) {
         this.imageE = imageE;
     }
-    
-    
+    */
+     public ImageView getImg() {
+        return img;
+    }
+
+    public void setImg(ImageView img) {
+        this.img = img;
+    }
   
 }

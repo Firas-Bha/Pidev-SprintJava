@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
@@ -12,12 +14,13 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane id="AnchorPane" prefHeight="822.0" prefWidth="1240.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.GestionResController">
+<AnchorPane id="AnchorPane" fx:id="rootJoueur" prefHeight="822.0" prefWidth="1240.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.controllers.GestionResController">
    <children>
       <AnchorPane layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="710.0" prefWidth="1120.0">
          <children>
@@ -25,9 +28,9 @@
                <children>
                   <VBox layoutX="-7.0" prefHeight="822.0" prefWidth="215.0" style="-fx-background-color: #E5E5E5;">
                      <children>
-                        <ImageView fitHeight="303.0" fitWidth="332.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fitHeight="306.0" fitWidth="276.0" preserveRatio="true">
                            <image>
-                              <Image url="@../../../../../Downloads/Logo_VF.png" />
+                              <Image url="@../imgs/Logo_VF.png" />
                            </image>
                         </ImageView>
                         <Button alignment="BASELINE_LEFT" graphicTextGap="10.0" mnemonicParsing="false" prefHeight="37.0" prefWidth="210.0" stylesheets="@../utils/fullpackstyling.css" text="Dashboard">
@@ -132,11 +135,11 @@
                         </Label>
                         <Circle fill="WHITE" layoutX="398.0" layoutY="425.0" radius="10.0" stroke="WHITE" strokeType="INSIDE" />
                         <Circle fill="WHITE" layoutX="639.0" layoutY="425.0" radius="10.0" stroke="WHITE" strokeType="INSIDE" />
-                        <Label layoutX="45.0" layoutY="105.0" prefHeight="21.0" prefWidth="127.0" text="Nom Evénement" />
-                        <Label layoutX="42.0" layoutY="147.0" prefHeight="21.0" prefWidth="45.0" text="Date" />
-                        <Label layoutX="40.0" layoutY="214.0" prefHeight="21.0" prefWidth="167.0" text="Nombre de Personnes" />
-                        <TextField fx:id="nbrPerRes" layoutX="244.0" layoutY="209.0" prefHeight="31.0" prefWidth="89.0" />
-                        <TableView fx:id="affichageRes" layoutX="453.0" layoutY="74.0" prefHeight="514.0" prefWidth="563.0">
+                        <Label layoutX="53.0" layoutY="229.0" prefHeight="21.0" prefWidth="127.0" text="Nom Evénement" />
+                        <Label layoutX="50.0" layoutY="271.0" prefHeight="21.0" prefWidth="45.0" text="Date" />
+                        <Label layoutX="48.0" layoutY="338.0" prefHeight="21.0" prefWidth="167.0" text="Nombre de Personnes" />
+                        <TextField fx:id="nbrPerRes" layoutX="252.0" layoutY="333.0" prefHeight="31.0" prefWidth="89.0" />
+                        <TableView fx:id="affichageRes" layoutX="438.0" layoutY="204.0" prefHeight="507.0" prefWidth="563.0">
                            <columns>
                               <TableColumn fx:id="idRestab" prefWidth="62.0" text="id" />
                               <TableColumn fx:id="nomEvRestab" prefWidth="147.0" text="Nom Evénement" />
@@ -145,11 +148,23 @@
                               <TableColumn fx:id="emailRestab" prefWidth="120.0" text="email" />
                            </columns>
                         </TableView>
-                        <Button fx:id="ajouterResbtn" layoutX="264.0" layoutY="315.0" mnemonicParsing="false" onAction="#ajouterResbtn" text="Ajouter" />
-                        <DatePicker fx:id="dateRes" layoutX="125.0" layoutY="142.0" onAction="#dateRes" prefHeight="31.0" prefWidth="207.0" />
-                        <ComboBox fx:id="idEvRes" layoutX="169.0" layoutY="100.0" onAction="#getEv" prefWidth="150.0" />
-                        <Label layoutX="47.0" layoutY="262.0" prefHeight="21.0" prefWidth="76.0" text="Email" />
-                        <TextField fx:id="emailRes" layoutX="135.0" layoutY="257.0" />
+                        <Button fx:id="ajouterResbtn" layoutX="272.0" layoutY="439.0" mnemonicParsing="false" onAction="#ajouterResbtn" text="Ajouter" />
+                        <DatePicker fx:id="dateRes" layoutX="133.0" layoutY="266.0" onAction="#dateRes" prefHeight="31.0" prefWidth="207.0" />
+                        <ComboBox fx:id="idEvRes" layoutX="177.0" layoutY="224.0" onAction="#getEv" prefWidth="150.0" />
+                        <Label layoutX="55.0" layoutY="386.0" prefHeight="21.0" prefWidth="76.0" text="Email" />
+                        <TextField fx:id="emailRes" layoutX="143.0" layoutY="381.0" />
+                        <Label layoutX="55.0" layoutY="90.0" prefHeight="35.0" prefWidth="197.0" text="Capacité Totale" textFill="#b24343">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <JFXTextField fx:id="capacite" editable="false" focusColor="#1241cd" layoutX="59.0" layoutY="132.0" text="0" unFocusColor="#8a1313" />
+                        <Label layoutX="312.0" layoutY="90.0" prefHeight="35.0" prefWidth="330.0" text="Nombre de Place Réservé" textFill="#b24343">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <JFXTextField fx:id="placedispo" editable="false" layoutX="329.0" layoutY="132.0" text="0" />
                      </children>
                   </Pane>
                   <Circle fill="#f94344" layoutX="1221.0" layoutY="32.0" radius="14.0" stroke="WHITE" strokeType="INSIDE" />
@@ -158,11 +173,33 @@
                         <Font name="System Bold" size="12.0" />
                      </font>
                   </Label>
-                  <Button fx:id="supprimerResbtn" layoutX="1111.0" layoutY="593.0" mnemonicParsing="false" onAction="#supprimerResbtn" text="Supprimer" />
-                  <Button fx:id="modifierResbtn" layoutX="990.0" layoutY="593.0" mnemonicParsing="false" onAction="#modifierResbtn" text="Modifier" />
+                  <Button fx:id="supprimerResbtn" layoutX="1118.0" layoutY="714.0" mnemonicParsing="false" onAction="#supprimerResbtn" text="Supprimer" />
+                  <Button fx:id="modifierResbtn" layoutX="982.0" layoutY="714.0" mnemonicParsing="false" onAction="#modifierResbtn" text="Modifier" />
+                  <JFXButton layoutX="318.0" layoutY="669.0" onAction="#goToIMC" prefHeight="37.0" prefWidth="76.0" text="IMC" textFill="#b52424">
+                     <font>
+                        <Font name="System Bold" size="21.0" />
+                     </font>
+                  </JFXButton>
+                  <ImageView fitHeight="84.0" fitWidth="103.0" layoutX="304.0" layoutY="714.0">
+                     <image>
+                        <Image url="@../imgs/body-fat.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="68.0" fitWidth="95.0" layoutX="464.0" layoutY="730.0">
+                     <image>
+                        <Image url="@../imgs/calories.png" />
+                     </image>
+                  </ImageView>
+                  <JFXButton layoutX="464.0" layoutY="669.0" onAction="#goToCalories" text="Calories" textFill="#b52424">
+                     <font>
+                        <Font name="System Bold" size="21.0" />
+                     </font>
+                  </JFXButton>
+                  <JFXButton fx:id="qr" layoutX="670.0" layoutY="741.0" onAction="#generateqr" text="Generate QR" />
                </children>
             </Pane>
          </children>
       </AnchorPane>
+      <StackPane fx:id="stckJoueur" prefHeight="150.0" prefWidth="200.0" />
    </children>
 </AnchorPane>

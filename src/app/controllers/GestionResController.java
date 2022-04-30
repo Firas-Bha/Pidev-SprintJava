@@ -3,9 +3,28 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gui;
+package app.controllers;
 
 import app.controllers.GestionEvController;
+import com.google.common.base.Joiner;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+
+import com.google.zxing.*;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.client.j2se.MatrixToImageConfig;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+
+
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXTextField;
+import javafx.embed.swing.SwingFXUtils;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+
 import static com.sun.org.apache.xalan.internal.lib.ExsltDatetime.date;
 import entities.Evenement;
 import java.net.URL;
@@ -52,6 +71,8 @@ import javafx.event.ActionEvent;
 import service.EvenementService;
 import static entities.Evenement.filename;
 import entities.Reservation;
+import java.awt.AlphaComposite;
+import java.awt.Graphics2D;
 import java.awt.SystemTray;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -72,16 +93,23 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.stage.FileChooser;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -98,12 +126,26 @@ import javafx.scene.control.TableColumnBuilder;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
+import javax.mail.Address;
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.swing.JFileChooser;
 import org.controlsfx.control.Notifications;
 import service.ReservationService;
+import util.MyDB;
 
 /**
  * FXML Controller class
@@ -156,18 +198,30 @@ public class GestionResController implements Initializable {
     ObservableList <String>list_nom_Evenement;
     
     List <Evenement>list_Evenement;
+     List <String>list_Evenement2;
     @FXML
     private TextField emailRes;
     @FXML
     private TableColumn<Evenement,String> emailRestab;
     private Date date_res;
     private int  event_id;
+    private int  event_id2;
     private String nomEv;
     private int  id_event_select;
     @FXML
     private Button evicon;
     @FXML
     private Button resicon;
+    @FXML
+    private JFXTextField capacite;
+    @FXML
+    private JFXTextField placedispo;
+    @FXML
+    private JFXButton qr;
+    @FXML
+    private AnchorPane rootJoueur;
+    @FXML
+    private StackPane stckJoueur;
 
     /**
      * Initializes the controller class.
@@ -178,8 +232,18 @@ public class GestionResController implements Initializable {
     
          ReservationService rs = new ReservationService();
        //  EvenementService sp= new  EvenementService();
+       
+       /* try {
+            sommePlace (id);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }*/
 
        /*
+       
+      
          
        try {
            
@@ -190,50 +254,83 @@ public class GestionResController implements Initializable {
         }
 */
         
-      int i;
+      int i,p;
         EvenementService sp= new  EvenementService();
-         list_Evenement = sp.recupererEvenement();       
+         list_Evenement = sp.recupererEvenement();
+
        List<String>  col = new ArrayList<String>();
         for(Evenement si : list_Evenement ){
         col.add(si.getNom());
         }
         list_nom_Evenement = FXCollections.observableArrayList(col);
         idEvRes.setItems(list_nom_Evenement);
-        
          affichageRes.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
-            public void handle(MouseEvent event) {
+            public void handle(MouseEvent event)  {
                 
-                id = rs.recupererReservation()
-                        .get(affichageRes.getSelectionModel().getSelectedIndex())
-                        .getId();
-                
-                dateRes.setValue(LocalDate.parse(rs.recupererReservation()
-                    .get(affichageRes.getSelectionModel()
-                            .getSelectedIndex())
-                    .getDate_res()
-
-                ));
-                idEvRes.setValue(String.valueOf(rs.recupererReservation()
+           
+                    
+                    try {
+                        id = rs.recupererReservation()
+                                .get(affichageRes.getSelectionModel().getSelectedIndex())
+                                .getId();
+                        
+                        dateRes.setValue(LocalDate.parse(rs.recupererReservation()
+                                .get(affichageRes.getSelectionModel()
+                                        .getSelectedIndex())
+                                .getDate_res()
+                                
+                        ));
+                        idEvRes.setValue(String.valueOf(rs.recupererReservation()
+                                .get(affichageRes.getSelectionModel().
+                                        getSelectedIndex())
+                                .getNom()));
+                        
+                        
+                        nbrPerRes.setText(String.valueOf(rs.recupererReservation()
+                                .get(affichageRes.getSelectionModel().
+                                        getSelectedIndex())
+                                .getNbr_personnes()));
+                        
+                        
+                        emailRes.setText(rs.recupererReservation()
+                                .get(affichageRes.getSelectionModel()
+                                        .getSelectedIndex())
+                                .getEmail()
+                        );
+                        
+                        capacite.setText(String.valueOf(rs.recupererReservation()
+                                .get(affichageRes.getSelectionModel().
+                                        getSelectedIndex())
+                                .getCapacite()));
+                      
+                        /* placedispo.setText(String.valueOf(rs.sommePersonne( id_event_select)
                         .get(affichageRes.getSelectionModel().
-                                getSelectedIndex())
-                        .getNom()));
-                
-                
-                 nbrPerRes.setText(String.valueOf(rs.recupererReservation()
-                        .get(affichageRes.getSelectionModel().
-                                getSelectedIndex())
-                        .getNbr_personnes()));
-                
-                
-                 emailRes.setText(rs.recupererReservation()
-                        .get(affichageRes.getSelectionModel()
-                                .getSelectedIndex())
-                        .getEmail()
-                ); 
-    
+                        getSelectedIndex())
+                        .getNbPerDispo()));
+                        */
+                        String str = Joiner.on("").join(rs.sommePersonne(id_event_select)); 
+                          
+                        
+                       placedispo.setText(String.valueOf(str));
+                                        
+                               
+                       
+     
+                        
+                        
+                        
+                    } catch (SQLException ex) {
+                        Logger.getLogger(GestionResController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                  
+                    
+                    
+                    
+                } 
                
-                };
+               
+              
     
          }); 
        
@@ -246,11 +343,10 @@ public class GestionResController implements Initializable {
             idRestab.setCellValueFactory(new PropertyValueFactory<>("id"));
             nomEvRestab.setCellValueFactory(new PropertyValueFactory<>("Nom"));
             dateEvRestab.setCellValueFactory(new PropertyValueFactory<>("date_res"));
-            nbrPerRestab.setCellValueFactory(new PropertyValueFactory<>("nbr_personnes"));
-            
+            nbrPerRestab.setCellValueFactory(new PropertyValueFactory<>("nbr_personnes"));           
             emailRestab.setCellValueFactory(new PropertyValueFactory<>("email"));
             affichageRes.setItems(recupererReservation);
-    
+            affichageRes.refresh();
         } catch (SQLException ex) {
             Logger.getLogger(GestionResController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -279,7 +375,7 @@ public class GestionResController implements Initializable {
         shpActive.setFill(Color.WHITE);
         double x, y = 0;
 
-
+     
     
  
    }
@@ -289,9 +385,54 @@ public class GestionResController implements Initializable {
     
 
     @FXML
-    private void ajouterResbtn(ActionEvent event) throws SQLException {
-        
-         if (emailRes.getText().contains("@")==false){
+    private void ajouterResbtn(ActionEvent event) throws SQLException,MessagingException, IOException {
+         String nbr_personnes1= nbrPerRes.getText();
+         String capacite1 = capacite.getText();
+
+         String placedispo1= placedispo.getText();
+          Reservation res  = new Reservation();
+          Evenement ev = new Evenement();
+          ReservationService pcd = new ReservationService();
+           System.out.println(placedispo1);
+            System.out.println(capacite1);
+          
+                        if (Integer.parseInt(capacite1) <= Integer.parseInt(placedispo1))
+         {
+             System.out.println(placedispo1);
+            
+              Notifications notificationBuilder=Notifications.create()
+              .title("Alert").text("Evenement malheureusement complet,veuillez saisir un autre").graphic(null).hideAfter(javafx.util.Duration.seconds(5))
+              .position(Pos.CENTER)
+              .onAction(new EventHandler<ActionEvent>(){
+                  public void handle(ActionEvent event)
+                      {
+                          System.out.println("clicked ON");
+                      }
+              });
+      notificationBuilder.darkStyle();
+      notificationBuilder.show();
+         }
+  
+       
+               
+ 
+                        else   if(Integer.parseInt(nbr_personnes1) > 2 )
+         {
+              Notifications notificationBuilder=Notifications.create()
+              .title("Alert").text("maximum 2 résevation").graphic(null).hideAfter(javafx.util.Duration.seconds(5))
+              .position(Pos.CENTER)
+              .onAction(new EventHandler<ActionEvent>(){
+                  public void handle(ActionEvent event)
+                      {
+                          System.out.println("clicked ON");
+                      }
+              });
+      notificationBuilder.darkStyle();
+      notificationBuilder.show();
+         }
+         
+      
+    else  if (emailRes.getText().contains("@")==false){
              Notifications notificationBuilder=Notifications.create()
               .title("Alert").text("@ is missing").graphic(null).hideAfter(javafx.util.Duration.seconds(5))
               .position(Pos.CENTER)
@@ -331,18 +472,18 @@ public class GestionResController implements Initializable {
       notificationBuilder.show();
         }
             else {
-         Reservation res  = new Reservation();
-          ReservationService pcd = new ReservationService();
+        
            // String event_id = idEvRes.getValue();
           res.setEvent_id(id_event_select);
-         String nbr_personnes= nbrPerRes.getText();
-         res.setNbr_personnes( Integer.parseInt(nbr_personnes));
-         String email  = emailRes.getText();
+          String email  = emailRes.getText();
          res.setEmail(email);
           String date_res = dateRes.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE);
          res.setDate_res(date_res);
-     
+         //String nbr_personnes= nbrPerRes.getText();
+         res.setNbr_personnes( Integer.parseInt(nbr_personnes1));          
+         res.setCapacite( Integer.parseInt(capacite1)); 
          pcd.ajouterReservation(res);
+
          try {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Done");
@@ -354,6 +495,8 @@ public class GestionResController implements Initializable {
                 alert.setTitle("Error!");
                 alert.show();
             }
+         
+         
         }
             
      }
@@ -460,14 +603,18 @@ public class GestionResController implements Initializable {
         notificationBuilder.showConfirm();
             
          affichageRes.setItems(res.getReservationliste());
+         
         }
 
     @FXML
     private void getEv(ActionEvent event) {
+        
          String nomEv= idEvRes.getSelectionModel().getSelectedItem();
          int event_id=idEvRes.getSelectionModel().getSelectedIndex();
           id_event_select=list_Evenement.get(event_id).getId();
-        
+          System.out.println(event_id);
+       
+     
     }
 
     @FXML
@@ -488,5 +635,55 @@ public class GestionResController implements Initializable {
               stage.setScene(scene);
               stage.show();   
     }
+
+ 
+    private void sommePlace(int event_id) throws SQLException, ClassNotFoundException {
+       ResultSet set = MyDB.getInstance().
+                getConnection().
+                prepareStatement
+                        ("select distinct sum(nbr_personnes)from reservation where event_id='"+event_id+"'")
+                .executeQuery();
+        if (set.next()) {
+            int NbPerDispo = set.getInt(1);
+            
+            placedispo.setText(String.valueOf(NbPerDispo));
+        }
+         
+    }
+
+    @FXML
+    private void goToIMC(ActionEvent event) {
+        
+         try {
+            Parent root = FXMLLoader.load(getClass().getResource("../../gui/IMC.fxml"));
+              Scene scene = new Scene(root);
+              Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+              stage.setScene(scene);
+              stage.show();   
+        } catch (IOException ex) {
+            Logger.getLogger(GestionEvController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @FXML
+    private void goToCalories(ActionEvent event) {
+           try {
+            Parent root = FXMLLoader.load(getClass().getResource("../../gui/calories.fxml"));
+              Scene scene = new Scene(root);
+              Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+              stage.setScene(scene);
+              stage.show();   
+        } catch (IOException ex) {
+            Logger.getLogger(GestionEvController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+
+    @FXML
+    private void generateqr(ActionEvent event) {
   
+}
+    
+    
+    
 }

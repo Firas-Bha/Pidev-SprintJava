@@ -12,18 +12,15 @@ package entities;
 public class Reservation {
     private int id;
     private String Nom;
-
-    public String getNom() {
-        return Nom;
-    }
-
-    public void setNom(String Nom) {
-        this.Nom = Nom;
-    }
     private String date_res;
     private int event_id;
     private int nbr_personnes;
     private String email;
+    private int capacite;
+    private int nbPerDispo;
+
+
+   
 
     public Reservation() {
     }
@@ -96,6 +93,28 @@ public class Reservation {
         this.email = email;
     }
     
+     public String getNom() {
+        return Nom;
+    }
+
+    public void setNom(String Nom) {
+        this.Nom = Nom;
+    }
+
+    public int getCapacite() {
+        return capacite;
+    }
+
+    public void setCapacite(int capacite) {
+        this.capacite = capacite;
+    }
     
+     public int getNbPerDispo() {
+        return nbPerDispo;
+    }
+
+    public void setNbPerDispo(int nbPerDispo) {
+        this.nbPerDispo = nbPerDispo;
+    }
   
 }

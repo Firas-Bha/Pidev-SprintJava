@@ -5,6 +5,7 @@
  */
 package service;
 
+import entities.Evenement;
 import java.util.List;
 import java.sql.SQLException;
 
@@ -17,4 +18,5 @@ public interface IServiceEvenement <T> {
     public void modifierEvenement (int id, String nom,int capacite,String date ,String description,String image,String adresse);
     public void supprimerEvenement(int id);
     public List<T> recupererEvenement ();
+    public Evenement afficher_ById(int id);
 }

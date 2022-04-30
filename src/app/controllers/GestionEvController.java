@@ -11,6 +11,13 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import java.sql.PreparedStatement;
+//import com.itextpdf.text.Image;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -47,7 +54,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import javafx.scene.control.Alert;
-import javafx.scene.image.Image;
+//import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import java.text.SimpleDateFormat;
@@ -62,10 +69,16 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
+
 import java.sql.Connection;
+
 import java.sql.ResultSet;
 import java.util.List;
 import java.util.Optional;
@@ -95,7 +108,29 @@ import javax.swing.JFileChooser;
 import org.controlsfx.control.Notifications;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
-
+import util.MyDB;
+import java.sql.Statement;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.CMYKColor;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.jfoenix.controls.JFXButton;
+import java.awt.Desktop;
+import java.util.Base64;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import javafx.scene.control.Alert.AlertType;
+import service.EvenementService;
+import static service.EvenementService.decodeToImage;
+import sun.misc.BASE64Decoder;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 /**
@@ -127,6 +162,8 @@ public class GestionEvController implements Initializable {
     private Label lblClose;
     @FXML
     private TextField nomEv;
+     @FXML
+    private TextField filter;
     @FXML
     private DatePicker dateEv;
     @FXML
@@ -135,12 +172,15 @@ public class GestionEvController implements Initializable {
     private TextField descriptionEv;
     @FXML
     private Button imageEv;
+     @FXML
+    private Button send;
     @FXML
     private TextField adresseEv;
     @FXML
     private ImageView imagefield;
     String Filename;
       Random r = new Random();
+      EvenementService evs = new EvenementService();
     @FXML
     private TableView<Evenement> affichageEv;
     @FXML
@@ -154,15 +194,16 @@ public class GestionEvController implements Initializable {
     @FXML
     private TableColumn<Evenement,String> descriptionEvtab;
     @FXML
-    private TableColumn<Evenement,Image> imageEvtab;
+    private TableColumn<Evenement,ImageView> imageEvtab;
     @FXML
     private TableColumn<Evenement,String> adresseEvtab;
      ValidationSupport validationSupport = new ValidationSupport();
-     
+     static Evenement selectionedEvenement;
     
     private ImageView immm;
     public int id;
-        public ImageView photo;
+      public ImageView photo;
+        String img64,path="";
     @FXML
     private Button ajouterEvbtn;
     @FXML
@@ -170,6 +211,17 @@ public class GestionEvController implements Initializable {
     @FXML
     private Button supprimerEvbtn;
     ObservableList list;
+    
+    @FXML
+    private Button pdf;
+    
+    @FXML
+    private Button excel;
+   
+Connection cnx =MyDB.getInstance().getConnection();
+    
+    
+    
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -242,7 +294,7 @@ public class GestionEvController implements Initializable {
                
          }); 
        
-        Evenement ev = new Evenement();
+      /*  Evenement ev = new Evenement();
          ObservableList<Evenement> recupererEvenement ;
           List Evenement = evs.recupererEvenement();
         list = FXCollections.observableArrayList(Evenement);
@@ -250,16 +302,66 @@ public class GestionEvController implements Initializable {
        
        int  listNum = 1;        
    Evenement = FXCollections.observableArrayList();
-            try {
-                  
-            recupererEvenement =evs.getEvenementliste();
+         */
+          
+       
+           // try {
+             List<Evenement> le=evs.recupererEvenement();  
+        ObservableList<Evenement> datalist = FXCollections.observableArrayList(le);
+           // recupererEvenement =evs.getEvenementliste();
             idEvtab.setCellValueFactory(new PropertyValueFactory<>("id"));
             nomEvtab.setCellValueFactory(new PropertyValueFactory<>("Nom"));
             capaciteEvtab.setCellValueFactory(new PropertyValueFactory<>("Capacite"));
             dateEvtab.setCellValueFactory(new PropertyValueFactory<>("Date"));
             descriptionEvtab.setCellValueFactory(new PropertyValueFactory<>("Description"));
+            imageEvtab.setCellValueFactory(new PropertyValueFactory<>("img"));       
+            adresseEvtab.setCellValueFactory(new PropertyValueFactory<>("Adresse"));
+            affichageEv.setItems(datalist);
+      
+            affichageEv.refresh();
+            
+             try{
+         affichageEv.setItems(datalist);
+        //recherche avec filtre
+         FilteredList<Evenement> filtredData = new FilteredList<>(datalist, b -> true);
+         filter.textProperty().addListener((observable, olValue, newValue)->{
+             filtredData.setPredicate(p-> {
+                 if(newValue == null|| newValue.isEmpty()){
+                     return true;
+                 }
+                 String lowerCaseFilter= newValue.toLowerCase();
+                 if(p.getNom().toLowerCase().indexOf(lowerCaseFilter)!=-1){
+                     return true;
+                 }else if(p.getDescription().toLowerCase().indexOf(lowerCaseFilter)!=-1){
+                     return true;
+                 }
+                 else if(String.valueOf(p.getCapacite()).indexOf(lowerCaseFilter)!=-1){
+                     
+                     return true;
+                 }else if(String.valueOf(p.getAdresse()).indexOf(lowerCaseFilter)!=-1){
+                 return true;
+                 }else if(String.valueOf(p.getDate()).indexOf(lowerCaseFilter)!=-1){
+                 return true;
+                 }
+                     else
+                     return false;
+                 });
+             });
+         SortedList<Evenement> sortedData = new SortedList<>(filtredData);
+         sortedData.comparatorProperty().bind(affichageEv.comparatorProperty());
+         affichageEv.setItems(sortedData);
+         }catch(Exception e){
+             System.out.println(e.getMessage());
              
-          //  imageEvtab.setCellValueFactory(new PropertyValueFactory<>("image"));
+         }
+            
+            
+            
+            
+            
+            
+     /*        
+          
              imageEvtab.setCellFactory(param -> {
        //Set up the ImageView
       final ImageView imageview = new ImageView();
@@ -281,10 +383,10 @@ public class GestionEvController implements Initializable {
             imageEvtab.setCellValueFactory(new PropertyValueFactory<Evenement, Image>("imageE"));
             adresseEvtab.setCellValueFactory(new PropertyValueFactory<>("Adresse"));
             affichageEv.setItems(recupererEvenement);
-           
-            } catch (SQLException ex) {
-            Logger.getLogger(GestionEvController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+           */
+           //} catch (SQLException ex) {
+            //Logger.getLogger(GestionEvController.class.getName()).log(Level.SEVERE, null, ex);
+    
                 
         
         // TODO
@@ -347,13 +449,36 @@ public Object getImage() {
     }
 
 */ 
-    /////////////////////////////CRUD////////////////////////////////////
+    /////////////////////////////CRUD//////////////////////@FXML
     @FXML
     private void dateEv(ActionEvent event) {
     }
     
+      public void Calendar(String Titre , String Datedeb , String Datefin) throws MalformedURLException, IOException{
+        // Using Calendar api
+          URL url = new URL("https://www.googleapis.com/calendar/v3/o3esqfud4k9qhcma6430ui8v2g@group.calendar.google.com/Events");
+      HttpURLConnection http = (HttpURLConnection)url.openConnection();
+      http.setRequestMethod("POST");
+      http.setDoOutput(true);
+      http.setRequestProperty("Authorization", "Bearer ya29.A0ARrdaM-T_VM8jgMQwq1AqpGaOUn1d6EO2TFD3n60OUU_2FFFdgV_9qbpNikPt0MyT6Unb60xa079CbwOZ0pMoLb_GJzZKq5nEWZvinAwkwuWBAMspXWdoJ-0xzi2O1TDut9igeb2Se9uTl_p99CMmVIKlW9w");
+      http.setRequestProperty("Content-Type", "application/json");
+
+      String data = "{\n\"summary\": \""+Titre+"\",\n  \"location\": \"feel the burn Application\",\n  \"start\": {\n    \"dateTime\": \""+Datedeb+"T10:00:00.000-06:00\"\n  },\n  \"end\": {\n    \"dateTime\": \""+Datefin+"T10:25:00.000-06:00\"\n    }\n\n}";
+//T10:00:00.000-06:00 heya 16h yaani 4pm
+//String data = "{\n\"summary\": \""+Titre+"\",\n  \"location\": \"feel the burn Application\",\n  \"start\": {\n    \"dateTime\": \""+Datedeb+"\"\n  },\n  \"end\": {\n    \"dateTime\": \""+Datefin+"\"\n    }\n\n}";
+//String data = "{\n\"summary\": \"tournament\",\n  \"location\": \"Arena Application\",\n  \"start\": {\n    \"dateTime\": \""+tfDateDebut.getValue().format(DateTimeFormatter.ISO_DATE)+"T10:00:00.000-07:00\"\n  },\n  \"end\": {\n    \"dateTime\": \""+tfDateFin.getValue().format(DateTimeFormatter.ISO_DATE)+"\n    },\n\"etag\": \"\", \n      \"backgroundColor\": \"#b80672\", \n      \"timeZone\": \"UTC\", \n      \"accessRole\": \"reader\",\n\"kind\": \"calendar#calendarListEntry\", \n      \"foregroundColor\": \"#ffffff\", \n      \"defaultReminders\": [], \n      \"colorId\": \"2\"\n\n}\n";
+     byte[] out = data.getBytes(StandardCharsets.UTF_8);
+
+     OutputStream stream = http.getOutputStream();
+     stream.write(out);
+
+     System.out.println(http.getResponseCode() + " " + http.getResponseMessage() + "Cours added to Calendar Successfully");
+      http.disconnect();
+        
+        // end Calendar 
+}
       @FXML
-    private void ajouterEv(ActionEvent event ) throws SQLException {
+    private void ajouterEv(ActionEvent event ) throws SQLException ,IOException {
         
       
          
@@ -375,18 +500,13 @@ public Object getImage() {
       notificationBuilder.darkStyle();
       notificationBuilder.show();
        }
-       
-      
        else {
-    
-          
-     ////
           String Nom  = nomEv.getText();
             String Capacite = capaciteEv.getText();
             String Date = dateEv.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE);
             String Description = descriptionEv.getText();
             String Adresse = adresseEv.getText();
-            Evenement ev = new Evenement (Nom,Integer.parseInt(Capacite),Date,Description,filename,Adresse);
+            Evenement ev = new Evenement (Nom,Integer.parseInt(Capacite),Date,Description,encodeb64(path),Adresse);
              EvenementService pcd = new EvenementService();
 
                       pcd.ajouterEvenement(ev);
@@ -406,23 +526,43 @@ public Object getImage() {
                       }
               });
       notificationBuilder.darkStyle();
-      notificationBuilder.show();
-     
-      
+      notificationBuilder.showConfirm();
+      Calendar(nomEv.getText(),dateEv.getValue().format(DateTimeFormatter.ISO_DATE),dateEv.getValue().format(DateTimeFormatter.ISO_DATE));
+
        }
-       
-           
-           
-       
-        
-            
-       
-            
+    
      }
     
     @FXML
     private void uploadimg(ActionEvent event) throws FileNotFoundException, IOException {
     
+          FileChooser chooser = new FileChooser();
+    chooser.setTitle("choisir une image");
+     FileChooser.ExtensionFilter filter=new FileChooser.ExtensionFilter("image file","*.png","*.jpg","*.jpeg");
+   chooser.getExtensionFilters().add(filter);
+    File file = chooser.showOpenDialog(imageEv.getScene().getWindow());
+   if(file!=null){
+       javafx.scene.image.Image img= new javafx.scene.image.Image(file.toURI().toString());
+   path= file.getPath();
+  imagefield.setImage(img);
+  imagefield.setFitHeight(215);
+  imagefield.setFitWidth(265);
+   Notifications notificationBuilder=Notifications.create()
+              .title("Succées").text("Image insérèe ").graphic(null).hideAfter(javafx.util.Duration.seconds(5))
+              .position(Pos.CENTER_LEFT)
+              .onAction(new EventHandler<ActionEvent>(){
+                  public void handle(ActionEvent event)
+                      {
+                          System.out.println("clicked ON");
+                      }
+              });
+      notificationBuilder.darkStyle();
+      notificationBuilder.show();
+        
+   } 
+       
+        
+        /*
        FileChooser f = new FileChooser();
         String img;
 
@@ -476,6 +616,32 @@ public Object getImage() {
         imageEv.setText(url);
         }  
 */
+    }
+    
+     private String encodeb64(String path) throws FileNotFoundException, IOException
+    {
+    File file = new File(path);
+byte[] bytes = new byte[(int)file.length()];
+FileInputStream fis = new FileInputStream(file);
+fis.read(bytes); 
+fis.close();
+String ef = Base64.getEncoder().encodeToString(bytes);
+return ef;
+    }
+    public static BufferedImage decodeToImage(String imageString) {
+ 
+        BufferedImage image = null;
+        byte[] imageByte;
+        try {
+            BASE64Decoder decoder = new BASE64Decoder();
+            imageByte = decoder.decodeBuffer(imageString);
+            ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
+            image = ImageIO.read(bis);
+            bis.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return image;
     }
     @FXML
     private void supprimerEvbtn(ActionEvent event) throws SQLException {
@@ -607,9 +773,306 @@ public Object getImage() {
               Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
               stage.setScene(scene);
               stage.show();   }
+    
+    @FXML
+    private void excel(ActionEvent event) throws  SQLException, FileNotFoundException, IOException  {
+        
+         Connection cnx = MyDB.getInstance().getConnection();
+        String query = "Select * from Evenement";
+         PreparedStatement pst = cnx.prepareStatement(query);
+            ResultSet rs = pst.executeQuery();
+        
+       
+            XSSFWorkbook wb = new XSSFWorkbook();
+            XSSFSheet sheet = wb.createSheet("Détail Evenement");
+            XSSFRow header = sheet.createRow(0);
+            header.createCell(0).setCellValue("id");
+            header.createCell(1).setCellValue("Nom");
+            header.createCell(2).setCellValue("Capacite");
+            header.createCell(3).setCellValue("Date");
+             header.createCell(4).setCellValue("Description");
+              header.createCell(5).setCellValue("Adresse");
 
+            
+            int index = 1;
+            while(rs.next()){
+                XSSFRow row = sheet.createRow(index);
+                
+                row.createCell(0).setCellValue(rs.getString("id"));
+            row.createCell(1).setCellValue(rs.getString("Nom"));
+            row.createCell(2).setCellValue(rs.getString("Capacite"));
+            row.createCell(3).setCellValue(rs.getString("Date"));
+             row.createCell(4).setCellValue(rs.getString("Description"));
+              row.createCell(5).setCellValue(rs.getString("Adresse"));
+              
+                index++;
+            }
+             
+           
+            FileOutputStream file = new FileOutputStream("Evenement.xlsx");
+            wb.write(file);
+            file.close();
+            
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Information Dialog");
+            alert.setHeaderText(null);
+            alert.setContentText("Exportation effectuée!!!");
+            alert.showAndWait();
+            pst.close();
+            rs.close();
+            File myFile = new File("C:\\Users\\firas\\OneDrive\\Desktop\\PidevJava\\Evenement.xlsx");
+             Desktop.getDesktop().open(myFile);
+         }
+    
+    
+    
+    @FXML
+    private void pdf(ActionEvent event)  throws  SQLException,FileNotFoundException, DocumentException, IOException {
+       
+        
+        
+      try
+      {Evenement  ev=evs.afficher_ById(affichageEv.getSelectionModel().getSelectedItem().getId());
+        
 
+          Document document = new Document();
+         PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(""+ev.getNom()+".pdf"));
+         document.open();
+          Paragraph TitleAct = new Paragraph(ev.getNom());
+          TitleAct.setAlignment(1);
+         document.add(TitleAct);
+         
+//Add Image
+javafx.scene.image.Image img=SwingFXUtils.toFXImage(decodeToImage(ev.getImage()), null);
+//Add Image
+BASE64Decoder decoder = new BASE64Decoder();
+           byte[] imgb = decoder.decodeBuffer(ev.getImage());
+	Image image1 = Image.getInstance(imgb);
+			//For Fixed Positioning
+			//image1.setAbsolutePosition(100f, 550f);
+			//Scale to new height and new width of image
+			image1.scaleAbsolute(250, 250);
+                        image1.setAlignment(1);
+			//Add to document
+			document.add(image1);
+                        Paragraph DateAct = new Paragraph("Date de l'actualité : "+ev.getDate().toString());
+    DateAct.setAlignment(0);
+         document.add(DateAct);
+Paragraph DescAct = new Paragraph("Description : "+ev.getDescription());
+    DescAct.setAlignment(0);
+         document.add(DescAct);
+  
+    
+    //Add to document
+    //document.add((Element) img);
+        
+         document.close();
+         writer.close();
+         Notifications notificationBuilder=Notifications.create()
+              .title("Succées").text("Actualité Exportée ").graphic(null).hideAfter(javafx.util.Duration.seconds(5))
+              .position(Pos.CENTER_LEFT)
+              .onAction(new EventHandler<ActionEvent>(){
+                  public void handle(ActionEvent event)
+                      {
+                          System.out.println("clicked ON");
+                      }
+              });
+      notificationBuilder.darkStyle();
+      notificationBuilder.show();
+         File myFile = new File("C:\\Users\\firas\\OneDrive\\Desktop\\PidevJava\\evenement.pdf");
+             Desktop.getDesktop().open(myFile);
+      } catch (DocumentException e)
+      {
+         e.printStackTrace();
+      } catch (FileNotFoundException e)
+      {
+         e.printStackTrace();
+      }
+        
+    
+       
+       
+       
+     /*   String path="";
+JFileChooser j=new JFileChooser ();
+j.setFileSelection
+
+int x=j.showSaveDialog (j);
+if (x==JFileChooser. APPROVE_OPTION)
+    path=j.getSelectedFile ().getPath ();
+Document doc=new Document ();
+try{
+   PdfWriter.getInstance (doc, new FileOutputStream (path+".pdf"));
+   doc.open();
+PdfPTable tbl=new PdfPTable(6);
+
+//adding header
+tbl.addCell ("nom");
+tbl.addCell ("capacite");
+tbl.addCell ("date");
+tbl.addCell ("description");
+tbl.addCell ("Image");
+tbl.addCell ("Adresse");
+
+for (int i = 0; i < affichageEv.getItems().size(); i++) {
+    
+
+   String nom=nomEvtab.getCellData(i);
+//   String capacite=capaciteEvtab.getCellData(i).toString();
+   String date=dateEvtab.getCellData(i).toString();
+   String description=descriptionEvtab.getCellData(i);
+   
+   
+   
+   Evenement ev = new Evenement();
+   //Add Image
+javafx.scene.image.Image img=SwingFXUtils.toFXImage(decodeToImage(ev.getImage()), null);
+//Add Image
+BASE64Decoder decoder = new BASE64Decoder();
+           byte[] imgb = decoder.decodeBuffer(ev.getImage());
+	Image image1 = Image.getInstance(imgb);
+			//For Fixed Positioning
+			//image1.setAbsolutePosition(100f, 550f);
+			//Scale to new height and new width of image
+			image1.scaleAbsolute(250, 250);
+                        image1.setAlignment(1);
+			//Add to document
+			doc.add(image1);
+     
+         
+         
+         
+  // javafx.scene.image Image=imageEvtab.getCellData(i);
+   String adresse=adresseEvtab.getCellData(i);
+   tbl.addCell (nom);
+   //tbl.addCell (capacite);
+   tbl.addCell (date);
+   tbl.addCell (description);
+   tbl.addCell (adresse);
+   
 }
+    doc.add(new Phrase(16, "\n\n\n"));
+    doc.add(new Phrase(-16,"la liste de tes evenements"));	
+    doc.add(new Phrase(16, "\n\n\n")); 
+    doc.add(tbl);
+     
+}catch (FileNotFoundException ex) {
+    Logger.getLogger (GestionEvController.class.getName ()).log (Level.SEVERE, null, ex);
+    }
+doc.close();
+       
+    */   
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+    }
+
+   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    /*   
+       
+       String FILE_NAME = "C:\\Users\\firas\\OneDrive\\Desktop\\PidevJava\\Evenement.pdf";
+        Document document = new Document();
+        try {
+            PdfWriter.getInstance(document, new FileOutputStream(new File(FILE_NAME)));
+            document.open();
+            //Image imag = Image.getInstance("checkMark.jpg");
+            //imag.scaleAbsoluteWidth(100);
+            //imag.scaleAbsoluteHeight(92);
+           // imag.setAlignment(Image.ALIGN_LEFT);
+           // imag.setAlignment(Image.ALIGN_TOP);
+           // document.add(imag);
+            Paragraph p = new Paragraph();
+            p.add("Liste Evenements");
+            p.setAlignment(Element.ALIGN_CENTER);
+            document.add(p);
+            
+            
+            //Image img=Image.getInstance("C:\\Users\\malak_6\\Desktop\\integration\\src\\GUI\\img\\checkMark.jpg");
+           // img.scaleAbsoluteWidth(400);
+            //img.scaleAbsoluteHeight(92);
+           // imag.setAlignment(Image.ALIGN_LEFT);
+           // img.setAlignment(Image.ALIGN_CENTER);
+            //document.add(img);
+            Connection cnx =MyDB.getInstance().getConnection();
+            String query = "select nom,id from reservation where id=(select max(id) from reservation) ";
+            Statement stmt = null;
+            stmt = cnx.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            Paragraph p3 = null;
+            while (rs.next()) {
+                p3 = new Paragraph();
+                
+                
+              
+                p3.add(rs.getString("nom"));
+                document.add(p3);
+            }
+            document.close();
+            System.out.println("Done");
+        } catch 
+   
+(Exception e) {
+            e.printStackTrace();
+        }
+*/
+    
+     @FXML
+    private void sendmail(ActionEvent event) throws IOException,Exception {
+        
+       
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("../../gui/Send_Email.fxml"));
+              Scene scene = new Scene(root);
+              Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+              stage.setScene(scene);
+              stage.show();   
+        } catch (IOException ex) {
+            Logger.getLogger(GestionEvController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      
+    }
+
+    }
+
 
 
             

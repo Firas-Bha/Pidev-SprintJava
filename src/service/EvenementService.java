@@ -6,6 +6,8 @@
 package service;
 import app.controllers.GestionEvController;
 import entities.Evenement;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
@@ -21,8 +23,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javax.imageio.ImageIO;
+import sun.misc.BASE64Decoder;
 import util.MyDB;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.Collections;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javax.imageio.ImageIO;
+import sun.misc.BASE64Decoder;
 
 /**
  *
@@ -80,8 +102,24 @@ public class EvenementService  implements IServiceEvenement <Evenement> {
                  ev.setDate(rs.getString("date"));
                  ev.setDescription(rs.getString("description"));
                  ev.setImage(rs.getString("image"));
-                 ev.setAdresse(rs.getString("adresse"));
-                   FileInputStream inputStream;
+                  ev.setAdresse(rs.getString("adresse"));
+                 try{
+                      Image img = SwingFXUtils.toFXImage(decodeToImage(ev.getImage()), null);
+                ImageView v = new ImageView();
+                v.setImage(img);
+                v.setFitWidth(60);
+                v.setFitHeight(60);
+                 ev.setImg(v);
+               
+             
+              }
+               catch(Exception ex){}
+                evenement.add(ev);    
+            }
+               
+                 
+                
+                  /* FileInputStream inputStream;
         try  {
           
             inputStream = new FileInputStream("C:/Users/firas/OneDrive/Desktop/ProjetDev/Intégration/public/uploads/" +rs.getString("image"));
@@ -93,13 +131,13 @@ public class EvenementService  implements IServiceEvenement <Evenement> {
                      
         } catch (FileNotFoundException ex) {
             Logger.getLogger(GestionEvController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-             evenement.add(ev);    
+        }*/
+            
                   
              }
             
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
+        catch (SQLException ex) {
+            Logger.getLogger(EvenementService.class.getName()).log(Level.SEVERE, null, ex);
         }  
        
      return evenement;
@@ -139,6 +177,49 @@ public class EvenementService  implements IServiceEvenement <Evenement> {
         
         return  Evenementliste;
 
+    }
+    
+     @Override
+    public Evenement afficher_ById(int id) {
+         Evenement ev=new Evenement();
+        try {
+            Statement st;
+            st=cnx.createStatement();
+            
+            String query="SELECT * FROM `evenement` WHERE id='"+id+"'";
+            ResultSet rs=st.executeQuery(query);
+            while(rs.next()){
+              
+                 ev.setId(rs.getInt(1));
+                 ev.setNom(rs.getString("nom"));
+                 ev.setCapacite(rs.getInt("capacite"));
+                 ev.setDate(rs.getString("date"));
+                 ev.setDescription(rs.getString("description"));
+                 ev.setImage(rs.getString("image"));
+                 ev.setAdresse(rs.getString("adresse"));
+              
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(EvenementService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ev; 
+    }
+    
+        public static BufferedImage decodeToImage(String imageString) {
+ 
+        BufferedImage image = null;
+        byte[] imageByte;
+        try {
+            BASE64Decoder decoder = new BASE64Decoder();
+            imageByte = decoder.decodeBuffer(imageString);
+            ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
+            image = ImageIO.read(bis);
+            bis.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return image;
     }
     
 }

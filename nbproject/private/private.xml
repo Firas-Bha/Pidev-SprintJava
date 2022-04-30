@@ -3,14 +3,14 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/service/EvenementService.java</file>
-            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/gui/GestionEv.fxml</file>
-            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/gui/HomePage.java</file>
+            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/gui/SMSController.java</file>
+            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/gui/ChartResController.java</file>
+            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/app/controllers/IMCController.java</file>
             <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/app/controllers/GestionEvController.java</file>
-            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/gui/GestionResController.java</file>
-            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/gui/InscriptionFormController.java</file>
-            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/entities/Evenement.java</file>
+            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/app/controllers/GestionResController.java</file>
+            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/service/ReservationService.java</file>
             <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/gui/Main.java</file>
+            <file>file:/C:/Users/firas/OneDrive/Desktop/PidevJava/src/entities/Reservation.java</file>
         </group>
     </open-files>
 </project-private>
