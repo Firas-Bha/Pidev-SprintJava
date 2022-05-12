@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component type="Form" name="AjoutSalle" cloudDestinationProperty="AjoutSalle" enabled="true" layout="BoxLayout" boxLayoutAxis="Y" >
+  <component type="TextField" name="id" cloudBoundProperty="text" cloudDestinationProperty="TextField" text="" hint="id" >
+  </component>
+  <component type="TextField" name="surface" cloudBoundProperty="text" cloudDestinationProperty="TextField1" text="" hint="surface" >
+  </component>
+  <component type="TextField" name="nom" cloudBoundProperty="text" cloudDestinationProperty="TextField2" text="" hint="nom" >
+  </component>
+  <component type="TextField" name="capacite" cloudBoundProperty="text" cloudDestinationProperty="TextField3" text="" hint="capacite" >
+  </component>
+  <component type="TextField" name="nombrecoursmax" cloudBoundProperty="text" cloudDestinationProperty="TextField4" text="" hint="nombre de cours max" >
+  </component>
+  <component type="Button" name="ajouter" cloudDestinationProperty="Button" scrollVisible="true" text="ajouter" >
+  </component>
+</component>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component type="Form" name="AffichageSalle" cloudDestinationProperty="AffichageSalle" layout="BoxLayout" boxLayoutAxis="Y" >
+  <component type="Label" name="id" cloudDestinationProperty="Label" text="Label" >
+  </component>
+  <component type="Label" name="surface" cloudDestinationProperty="Label1" text="Label" >
+  </component>
+  <component type="Label" name="nom" cloudDestinationProperty="Label2" text="Label" >
+  </component>
+  <component type="Label" name="capacite" cloudDestinationProperty="Label3" text="Label" >
+  </component>
+  <component type="Label" name="nombre de cours max" cloudDestinationProperty="Label4" text="Label" >
+  </component>
+</component>
